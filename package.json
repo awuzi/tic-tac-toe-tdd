@@ -4,7 +4,8 @@
     "description": "Functional implementation of the TicTacToe game with TDD",
     "main": "index.js",
     "scripts": {
-        "test": "jest --watch --coverage",
+        "test": "jest --maxWorkers=50%",
+        "test:watch": "jest --watch --coverage",
         "lint": "prettier --write \"src/**/*.ts\""
     },
     "devDependencies": {
@@ -18,6 +19,10 @@
     "prettier": {
         "printWidth": 120,
         "singleQuote": true
+    },
+    "jest": {
+        "preset": "ts-jest",
+        "testEnvironment": "node"
     },
     "keywords": [
         "starter",
