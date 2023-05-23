@@ -1,7 +1,17 @@
 // @ts-ignore see https://github.com/jest-community/jest-extended#setup
 import * as matchers from 'jest-extended';
-import { checkWin, computeGameStatus, getNextPlayer, isCellEmpty, makeEmptyGrid, makeMove, readBoard, threeTokensMatch } from './index';
-import { CellState, Grid, PLAYERS, Position } from './types';
+import {
+  checkWin,
+  computeGameStatus,
+  computeNextState,
+  getNextPlayer,
+  isCellEmpty,
+  makeEmptyGrid,
+  makeMove,
+  readBoard,
+  threeTokensMatch
+} from './index';
+import { CellState, Grid, PLAYERS, Position, State } from './types';
 import { Success, success } from './utils/maybe';
 
 expect.extend(matchers);
@@ -274,10 +284,61 @@ describe('computeGameStatus()', () => {
 
 describe('computeNextState()', () => {
 
-  it.todo('should compute PENDING state');
+  it('should compute PENDING state', () => {
+    const grid: Grid = [
+      [PLAYERS.X, PLAYERS.X, PLAYERS.O],
+      ['_', PLAYERS.O, '_'],
+      ['_', '_', '_']
+    ];
+    const newPlayer = PLAYERS.X;
+    const oldState: State = {
+      grid,
+      currentPlayer: PLAYERS.O,
+      status: 'PENDING'
+    };
+    const position: Position = { x: 0, y: 1 };
+    const actual = computeNextState(oldState, newPlayer, position)
+      .map((s) => success(s.status)) as Success<string>;
 
-  it.todo('should compute WON state');
+    expect(actual.result).toEqual('PENDING');
+  });
 
-  it.todo('should compute DRAW state');
+  it('should compute WON state', () => {
+    const grid: Grid = [
+      [PLAYERS.X, PLAYERS.X, PLAYERS.O],
+      ['_', PLAYERS.O, PLAYERS.X],
+      ['_', '_', '_']
+    ];
+    const newPlayer = PLAYERS.O;
+    const oldState: State = {
+      grid,
+      currentPlayer: PLAYERS.X,
+      status: 'PENDING'
+    };
+    const position: Position = { x: 0, y: 2 };
+    const actual = computeNextState(oldState, newPlayer, position)
+      .map((s) => success(s.status)) as Success<string>;
+
+    expect(actual.result).toEqual('WON');
+  });
+
+  it('should compute DRAW state', () => {
+    const grid: Grid = [
+      [PLAYERS.X, PLAYERS.X, PLAYERS.O],
+      [PLAYERS.O, PLAYERS.O, PLAYERS.X],
+      [PLAYERS.X, PLAYERS.X, '_']
+    ];
+    const newPlayer = PLAYERS.X;
+    const oldState: State = {
+      grid,
+      currentPlayer: PLAYERS.O,
+      status: 'PENDING'
+    };
+    const position: Position = { x: 2, y: 2 };
+    const actual = computeNextState(oldState, newPlayer, position)
+      .map((s) => success(s.status)) as Success<string>;
+
+    expect(actual.result).toEqual('DRAW');
+  });
 
 });

@@ -1,16 +1,10 @@
-import { CellState, DrawState, GAME_STATUS, Grid, GRID_DIMENSION, PendingState, PLAYERS, Position, Row, State, WonState } from './types';
-import { error, Error, Maybe, success, Success } from './utils/maybe';
+import { CellState, DrawState, GAME_STATUS, Grid, PendingState, PLAYERS, Position, Row, State, WonState } from './types';
+import { error, Maybe, success } from './utils/maybe';
 
 export function makeEmptyGrid(
-  rows: number
-): (cols: number) => Grid {
-  return (cols: number): Grid => Array.from(Array(rows), makeColumn(cols));
-}
-
-function makeColumn(
-  col: number
-): () => Row {
-  return (): Row => Array(col).fill('_');
+  nbOfRows: number
+): (nbOfCols: number) => Grid {
+  return (nbOfCols: number): Grid => Array.from(Array(nbOfRows), makeColumn(nbOfCols));
 }
 
 export function isCellEmpty(
@@ -23,21 +17,14 @@ export function getNextPlayer(token: PLAYERS): PLAYERS {
   return token === PLAYERS.X ? PLAYERS.O : PLAYERS.X;
 }
 
-
 export function computeGameStatus(
   grid: Grid,
   token: PLAYERS
 ): GAME_STATUS {
-  if (checkDraw(grid)) {
-    return GAME_STATUS.DRAW;
-  }
-
-  if (checkWin(grid, token)) {
-    return GAME_STATUS.WON;
-  }
-
+  if (checkDraw(grid)) return GAME_STATUS.DRAW;
+  if (checkWin(grid, token)) return GAME_STATUS.WON;
   return GAME_STATUS.PENDING;
-};
+}
 
 export function checkWin(
   grid: Grid,
@@ -81,36 +68,56 @@ export function checkDraw(grid: Grid) {
 
 export function makeMove(
   token: PLAYERS,
-  { x, y }: Position,
+  position: Position,
   grid: Grid
 ): Maybe<Grid> {
-  const mutabledGrid = grid.map(
-    (row, rowIndex) => row.map(
-      (cell, cellIndex) => cell
-    )
-  );
+  const updatedGrid = grid
+    .map((row, rowIndex) => row.map(replaceCell(rowIndex, position, token)));
 
-  if (isCellEmpty(mutabledGrid[y][x])) {
-    mutabledGrid[y][x] = token;
-    return success(mutabledGrid);
-  }
-  return error('Error: cell is not empty !');
+  return isCellEmpty(grid[position.y][position.x])
+    ? success(updatedGrid)
+    : error('Error: cell is not empty !');
 }
-
 
 export function computeNextState<S extends GAME_STATUS>(
   state: State,
   token: PLAYERS,
   position: Position
 ): Maybe<State> {
-  if (state.status === 'PENDING') {
-    return makeMove(token, position, state.grid)
-      .map(grid => {
-        const status: GAME_STATUS = computeGameStatus(grid, token);
-        return success(updateState(state, status, grid, token));
-      });
-  }
-  return success(state);
+  return state.status === 'PENDING'
+    ? makeMove(token, position, state.grid).map(computeNext(state, token))
+    : success(state);
+}
+
+
+
+
+function makeColumn(
+  nbOfCols: number
+): () => Row {
+  return (): Row => Array(nbOfCols).fill('_');
+}
+
+
+const replaceCell = (
+  rowIndex: number,
+  { x, y }: Position,
+  token: PLAYERS
+): (cell: CellState, index: number) => CellState => {
+  return (cell: CellState, index: number) => {
+    return (rowIndex === y && index === x) ? token : cell;
+  };
+};
+
+
+const computeNext = (
+  currentState: State,
+  token: PLAYERS
+): (grid: Grid) => Maybe<State> => {
+  return (grid: Grid): Maybe<State> => {
+    const status: GAME_STATUS = computeGameStatus(grid, token);
+    return success(updateState(currentState, status, grid, token));
+  };
 };
 
 
