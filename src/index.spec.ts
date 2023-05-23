@@ -12,7 +12,7 @@ import {
   threeTokensMatch
 } from './index';
 import { CellState, Grid, PLAYERS, Position, State } from './types';
-import { Success, success } from './utils/maybe';
+import { Success, success } from './utils/result';
 
 expect.extend(matchers);
 

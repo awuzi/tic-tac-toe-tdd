@@ -1,5 +1,5 @@
 import { CellState, DrawState, GAME_STATUS, Grid, PendingState, PLAYERS, Position, Row, State, WonState } from './types';
-import { error, Maybe, success } from './utils/maybe';
+import { error, Result, success } from './utils/result';
 
 export function makeEmptyGrid(
   nbOfRows: number
@@ -70,7 +70,7 @@ export function makeMove(
   token: PLAYERS,
   position: Position,
   grid: Grid
-): Maybe<Grid> {
+): Result<Grid> {
   const updatedGrid = grid
     .map((row, rowIndex) => row.map(replaceCell(rowIndex, position, token)));
 
@@ -83,13 +83,11 @@ export function computeNextState<S extends GAME_STATUS>(
   state: State,
   token: PLAYERS,
   position: Position
-): Maybe<State> {
+): Result<State> {
   return state.status === 'PENDING'
     ? makeMove(token, position, state.grid).map(computeNext(state, token))
     : success(state);
 }
-
-
 
 
 function makeColumn(
@@ -113,8 +111,8 @@ const replaceCell = (
 const computeNext = (
   currentState: State,
   token: PLAYERS
-): (grid: Grid) => Maybe<State> => {
-  return (grid: Grid): Maybe<State> => {
+): (grid: Grid) => Result<State> => {
+  return (grid: Grid): Result<State> => {
     const status: GAME_STATUS = computeGameStatus(grid, token);
     return success(updateState(currentState, status, grid, token));
   };
