@@ -12,7 +12,7 @@ import {
   threeTokensMatch
 } from './index';
 import { CellState, Grid, PLAYERS, Position, State } from './types';
-import { Success, success } from './utils/result';
+import { Error, error, Success, success } from './utils/result';
 
 expect.extend(matchers);
 
@@ -339,6 +339,25 @@ describe('computeNextState()', () => {
       .map((s) => success(s.status)) as Success<string>;
 
     expect(actual.result).toEqual('DRAW');
+  });
+
+  it('should return error message', () => {
+    const grid: Grid = [
+      [PLAYERS.X, PLAYERS.X, PLAYERS.O],
+      [PLAYERS.O, PLAYERS.O, PLAYERS.X],
+      [PLAYERS.X, PLAYERS.X, PLAYERS.O]
+    ];
+    const newPlayer = PLAYERS.X;
+    const oldState: State = {
+      grid,
+      currentPlayer: PLAYERS.O,
+      status: 'PENDING'
+    };
+    const position: Position = { x: 0, y: 0 };
+    const actual = computeNextState(oldState, newPlayer, position)
+      .map((s) => error(s.status)) as Error<string>;
+
+    expect(actual.message).toEqual('Error: cell is not empty !');
   });
 
 });
